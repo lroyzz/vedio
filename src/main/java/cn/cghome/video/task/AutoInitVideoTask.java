@@ -8,6 +8,7 @@ import cn.cghome.video.service.IVideoService;
 import cn.cghome.video.util.EscapeUtil;
 import cn.cghome.video.util.StringUtil;
 
+import cn.cghome.video.util.ThreadPool;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
@@ -15,6 +16,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
@@ -25,6 +27,9 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.util.*;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 @Component
 public class AutoInitVideoTask {
@@ -39,6 +44,9 @@ public class AutoInitVideoTask {
     @Autowired
     private ISourceService sourceService;
 
+    @Autowired
+    private ThreadPool threadPool;
+
     /**
      * @param type    1:电影,2:电视剧,3:综艺,20:动漫
      * @param pageStr 从1开始
@@ -50,6 +58,7 @@ public class AutoInitVideoTask {
 
     /**
      * 获取document元素
+     *
      * @return
      */
     public static Document getDoc(String url) {
@@ -70,6 +79,7 @@ public class AutoInitVideoTask {
 
     /**
      * 获取分页document元素
+     *
      * @param videoTypeEnum
      * @param pageIndex
      * @return
@@ -80,6 +90,7 @@ public class AutoInitVideoTask {
 
     /**
      * 获取document元素
+     *
      * @param detailUrl
      * @return
      */
@@ -110,8 +121,8 @@ public class AutoInitVideoTask {
      * @param pageIndex
      * @return
      */
-    public void initPageData(VideoTypeEnum videoTypeEnum, int pageIndex) throws UnsupportedEncodingException, MalformedURLException {
-        Document doc = getPageDoc( videoTypeEnum, pageIndex);
+    public void initPageData(VideoTypeEnum videoTypeEnum, int pageIndex) {
+        Document doc = getPageDoc(videoTypeEnum, pageIndex);
 
         Elements elements = doc.select(".figures_list .list_item");
         List<Video> videoList = new ArrayList<>();
@@ -130,7 +141,7 @@ public class AutoInitVideoTask {
             String id = href.substring(href.indexOf("-id-") + 4, href.indexOf(".html"));
             video.setId(id);
             video.setName(name);
-            video.setType( videoTypeEnum.val());
+            video.setType(videoTypeEnum.val());
             video.setImg(img);
             video.setMaskTxt(maskTxt);
             System.out.println(video);
@@ -140,11 +151,11 @@ public class AutoInitVideoTask {
             Elements detailSources = detailDoc.select(".play_list_num li a");
 
             List<Source> sourceList = new ArrayList<>();
-            if (!CollectionUtils.isEmpty(detailSources)){
-                sourceService.remove(new QueryWrapper<Source>().eq("video_id",id));
+            if (!CollectionUtils.isEmpty(detailSources)) {
+                sourceService.remove(new QueryWrapper<Source>().eq("video_id", id));
                 for (Element detailSource : detailSources) {
                     // 删除淘宝优惠券链接
-                    if (detailSource.text().contains("淘宝优惠券")){
+                    if (detailSource.text().contains("淘宝优惠券")) {
                         continue;
                     }
                     String sourceName = detailSource.text();
@@ -158,14 +169,14 @@ public class AutoInitVideoTask {
 
                     palyUrl = EscapeUtil.unescape(palyUrl);
                     String[] splits = palyUrl.split("#");
-                    if (splits.length > 1){
-                        Map<String ,String> nameUrlMap = new HashMap<>();
+                    if (splits.length > 1) {
+                        Map<String, String> nameUrlMap = new HashMap<>();
                         for (String split : splits) {
                             String[] nameAndUrl = split.split("\\$");
-                            nameUrlMap.put(nameAndUrl[0],nameAndUrl[1]);
+                            nameUrlMap.put(nameAndUrl[0], nameAndUrl[1]);
                         }
                         palyUrl = nameUrlMap.get(sourceName);
-                    } else{
+                    } else {
                         palyUrl = palyUrl.split("\\$")[1];
                     }
 
@@ -183,20 +194,23 @@ public class AutoInitVideoTask {
 
     /**
      * 初始化数据
-     * @throws UnsupportedEncodingException
-     * @throws MalformedURLException
      */
-    public void init() throws UnsupportedEncodingException, MalformedURLException {
-        List<VideoTypeEnum> videoTypeEnums = Arrays.asList(VideoTypeEnum.TELEPLAY);
+    public void init() {
+        List<VideoTypeEnum> videoTypeEnums = Arrays.asList(VideoTypeEnum.MOVIE, VideoTypeEnum.TELEPLAY, VideoTypeEnum.VARIETY, VideoTypeEnum.ANIME);
 
         for (VideoTypeEnum videoTypeEnum : videoTypeEnums) {
             int pageCount = getPageCount(videoTypeEnum);
             int pageIndex = 1;
+            while (pageIndex <= pageCount) {
+                final int f_pageIndex = pageIndex;
+                threadPool.execute(new Thread() {
+                    @Override
+                    public void run() {
+                        initPageData(videoTypeEnum, f_pageIndex);
+                    }
+                });
 
-            while (pageIndex<= pageCount){
-                initPageData(videoTypeEnum, pageIndex);
                 pageIndex++;
-                break;
             }
         }
     }

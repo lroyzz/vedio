@@ -8,3 +8,9 @@ spring:
     url: jdbc:mysql://47.244.62.128:3306/video?characterEncoding=utf8&useSSL=false
     username: video
     password: video
+
+
+video:
+  options:
+    initTask:
+      threadCount: 10

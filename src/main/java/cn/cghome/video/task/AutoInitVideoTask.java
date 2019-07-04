@@ -24,9 +24,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLDecoder;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 @Component
 public class AutoInitVideoTask {
@@ -113,7 +111,7 @@ public class AutoInitVideoTask {
      * @return
      */
     public void initPageData(VideoTypeEnum videoTypeEnum, int pageIndex) throws UnsupportedEncodingException, MalformedURLException {
-        Document doc = getPageDoc(VideoTypeEnum.MOVIE, pageIndex);
+        Document doc = getPageDoc( videoTypeEnum, pageIndex);
 
         Elements elements = doc.select(".figures_list .list_item");
         List<Video> videoList = new ArrayList<>();
@@ -132,7 +130,7 @@ public class AutoInitVideoTask {
             String id = href.substring(href.indexOf("-id-") + 4, href.indexOf(".html"));
             video.setId(id);
             video.setName(name);
-            video.setType(VideoTypeEnum.MOVIE.val());
+            video.setType( videoTypeEnum.val());
             video.setImg(img);
             video.setMaskTxt(maskTxt);
             System.out.println(video);
@@ -161,9 +159,15 @@ public class AutoInitVideoTask {
                     palyUrl = EscapeUtil.unescape(palyUrl);
                     String[] splits = palyUrl.split("#");
                     if (splits.length > 1){
-                        // $$$$$ 处理多个url情况
+                        Map<String ,String> nameUrlMap = new HashMap<>();
+                        for (String split : splits) {
+                            String[] nameAndUrl = split.split("\\$");
+                            nameUrlMap.put(nameAndUrl[0],nameAndUrl[1]);
+                        }
+                        palyUrl = nameUrlMap.get(sourceName);
+                    } else{
+                        palyUrl = palyUrl.split("\\$")[1];
                     }
-                    palyUrl = palyUrl.split("\\$")[1];
 
                     Source source = new Source();
                     source.setVideoId(id);
@@ -177,10 +181,13 @@ public class AutoInitVideoTask {
         videoService.saveOrUpdateBatch(videoList);
     }
 
-    @PostConstruct
+    /**
+     * 初始化数据
+     * @throws UnsupportedEncodingException
+     * @throws MalformedURLException
+     */
     public void init() throws UnsupportedEncodingException, MalformedURLException {
-
-        List<VideoTypeEnum> videoTypeEnums = Arrays.asList(VideoTypeEnum.MOVIE,VideoTypeEnum.TELEPLAY,VideoTypeEnum.VARIETY,VideoTypeEnum.ANIME);
+        List<VideoTypeEnum> videoTypeEnums = Arrays.asList(VideoTypeEnum.TELEPLAY);
 
         for (VideoTypeEnum videoTypeEnum : videoTypeEnums) {
             int pageCount = getPageCount(videoTypeEnum);

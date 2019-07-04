@@ -3,6 +3,7 @@ package cn.cghome.video.controller;
 import cn.cghome.video.entity.Source;
 import cn.cghome.video.task.AutoInitVideoTask;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,7 +24,8 @@ import java.util.List;
  * @since 2019-07-04
  */
 @RestController
-@RequestMapping("/source")
+@RequestMapping("/sys")
+@Api(value = "系统管理", tags = "sys", description = "系统管理")
 public class SysController {
 
     @Autowired
@@ -37,11 +39,11 @@ public class SysController {
      * @author: czl
      * @date: 2019/5/15
      */
-    @ApiOperation(value = "手动初始化", httpMethod = "GET")
+    @ApiOperation(value = "手动初始化", httpMethod = "POST")
     @ApiImplicitParams({
     })
     @RequestMapping(value = "/init", method = RequestMethod.POST)
-    public Integer init(String videoId) {
+    public Integer init() {
         try {
             autoInitVideoTask.init();
         } catch (Exception e) {

@@ -1,6 +1,8 @@
 package cn.cghome.video.util;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
 
 import java.util.concurrent.ExecutorService;
@@ -13,7 +15,16 @@ public class ThreadPool {
     @Value("${video.options.initTask.threadCount}")
     private int threadCount;
 
-    private ExecutorService executorService = Executors.newFixedThreadPool(threadCount);
+    @Value("${spring.datasource.username}")
+    private String username;
+
+    @Autowired
+    private ExecutorService executorService;
+
+    @Bean
+    private ExecutorService executorService(){
+        return Executors.newFixedThreadPool(threadCount);
+    }
 
     public ExecutorService getExecutorService() {
         return executorService;

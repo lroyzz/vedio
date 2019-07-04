@@ -1,4 +1,4 @@
-package cn.cghome.vedio;
+package cn.cghome.video;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;

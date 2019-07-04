@@ -62,12 +62,14 @@ public class VideoController {
     @ApiImplicitParams({
             @ApiImplicitParam(name = "current", value = "当前页数 从1开始", required = true, dataType = "Long", paramType = "query"),
             @ApiImplicitParam(name = "size", value = "每页记录数", required = true, dataType = "Long", paramType = "query"),
-            @ApiImplicitParam(name = "type", value = "视频类型 1:电影,2:电视剧,3:综艺,20:动漫", required = true, dataType = "String", paramType = "type")
+            @ApiImplicitParam(name = "type", value = "视频类型 1:电影,2:电视剧,3:综艺,20:动漫", required = true, dataType = "String", paramType = "type"),
+            @ApiImplicitParam(name = "name", value = "视频名称", required = false, dataType = "String", paramType = "type")
     })
     @RequestMapping(value = "/list", method = RequestMethod.POST)
-    public IPage list(Page page, String type) {
+    public IPage list(Page page, String type, String name) {
         QueryWrapper<Video> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("type", type);
+        queryWrapper.like("name", name);
         return videoService.page(page, queryWrapper);
     }
 

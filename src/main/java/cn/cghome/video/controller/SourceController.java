@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -44,7 +45,7 @@ public class SourceController {
             @ApiImplicitParam(name = "videoId", value = "视频资源id", required = true, dataType = "String", paramType = "query"),
     })
     @RequestMapping(value = "/list", method = RequestMethod.GET)
-    public List<Source> list(String videoId) {
+    public List<Source> list(@RequestParam String videoId) {
         QueryWrapper<Source> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("video_id",videoId);
         return sourceService.list(queryWrapper);

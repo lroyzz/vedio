@@ -9,7 +9,6 @@ spring:
     username: video
     password: video
 
-
 video:
   options:
     initTask:

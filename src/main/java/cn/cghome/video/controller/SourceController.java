@@ -4,6 +4,7 @@ package cn.cghome.video.controller;
 import cn.cghome.video.entity.Source;
 import cn.cghome.video.service.ISourceService;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.api.R;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
@@ -45,10 +46,10 @@ public class SourceController {
             @ApiImplicitParam(name = "videoId", value = "视频资源id", required = true, dataType = "String", paramType = "query"),
     })
     @RequestMapping(value = "/list", method = RequestMethod.GET)
-    public List<Source> list(@RequestParam String videoId) {
+    public R<List<Source>> list(@RequestParam String videoId) {
         QueryWrapper<Source> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("video_id",videoId);
-        return sourceService.list(queryWrapper);
+        return R.ok(sourceService.list(queryWrapper));
     }
 
 }

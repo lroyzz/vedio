@@ -70,7 +70,7 @@ public class VideoController {
             @ApiImplicitParam(name = "name", value = "视频名称", required = false, dataType = "String", paramType = "query")
     })
     @RequestMapping(value = "/list", method = RequestMethod.GET)
-    public IPage list(Page<Video> page, @RequestParam String type, @RequestParam(required = false) String name) {
+    public IPage list(Page page, @RequestParam String type, @RequestParam(required = false) String name) {
         QueryWrapper<Video> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("type", type);
         if (!StringUtils.isEmpty(name)) {
